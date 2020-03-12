@@ -1,0 +1,166 @@
+<AutomationProject name="Automation-Server-0.0.1"
+	description="Automation Server Installer">
+	<AutomationAction name="AutomationCreateDirectoryAction"
+		description="Create fastest folder at installation directory"
+		class="com.infogain.automation.installer.actions.AutomationCreateDirectoryAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="COPYDEPENDENCYPHASE" retryCount="1">
+		<AutomationProperty propname="destination"
+			propvalue="${fastest.installer.installationLocation}">
+		</AutomationProperty>
+	</AutomationAction>
+		<AutomationAction
+		name="AutomationCopyResourceFromJarAction"
+		description="Copying folder structure zip"
+		class="com.infogain.automation.installer.actions.AutomationCopyResourceFromJarAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="COPYDEPENDENCYPHASE" retryCount="1">
+		<AutomationProperty propname="jarLoc"
+			propvalue="${fastest.installer.installerLocation}\\lib\\">
+		</AutomationProperty>
+		<AutomationProperty propname="dllLocInJar"
+			propvalue="directoryStructure.zip">
+		</AutomationProperty>
+		<AutomationProperty propname="zippedLoc"
+			propvalue="${fastest.installer.installationLocation}\\directoryStructure.zip">
+		</AutomationProperty>
+		<AutomationProperty propname="jarName"
+			propvalue="fastest-packaging">
+		</AutomationProperty>
+	</AutomationAction>
+	
+	<AutomationAction name="AutomationUnZippedAction"
+		description="Extracting all folders and files from the ZIP file"
+		class="com.infogain.automation.installer.actions.AutomationUnZippedAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="COPYDEPENDENCYPHASE" retryCount="1">
+		<AutomationProperty propname="zippedLoc"
+			propvalue="${fastest.installer.installationLocation}\\directoryStructure.zip">
+		</AutomationProperty>
+		<AutomationProperty propname="unZippedLoc"
+			propvalue="${fastest.installer.installationLocation}\\">
+		</AutomationProperty>
+	</AutomationAction>
+	
+		<AutomationAction
+		name="AutomationSearchAndCopyFileAction"
+		description="Search and Copy fastest jar from installer location to installation location"
+		class="com.infogain.automation.installer.actions.AutomationSearchAndCopyFileAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="COPYDEPENDENCYPHASE" retryCount="1">
+		<AutomationProperty propname="searchLocation"
+			propvalue="${fastest.installer.installerLocation}\\lib\\">
+		</AutomationProperty>
+		<AutomationProperty propname="destPath"
+			propvalue="${fastest.installer.installationLocation}\\lib\\">
+		</AutomationProperty>
+		<AutomationProperty propname="fileSearchTerm"
+			propvalue="fastest-automation">
+		</AutomationProperty>
+		<AutomationProperty propname="fileSearchExtension"
+			propvalue=".jar">
+		</AutomationProperty>
+		<AutomationProperty
+			propname="createDirIfNotPresent" propvalue="true">
+		</AutomationProperty>
+		<AutomationProperty
+			propname="deleteSourceDirectory" propvalue="false">
+		</AutomationProperty>
+		<AutomationProperty propname="backUpDestination"
+			propvalue="false">
+		</AutomationProperty>
+	</AutomationAction>
+	<AutomationAction
+		name="AutomationSearchAndCopyFileAction"
+		description="Search and Copy fastest jar from installer location to installation location"
+		class="com.infogain.automation.installer.actions.AutomationSearchAndCopyFileAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="COPYDEPENDENCYPHASE" retryCount="1">
+		<AutomationProperty propname="searchLocation"
+			propvalue="${fastest.installer.installerLocation}\\serviceInstaller\\">
+		</AutomationProperty>
+		<AutomationProperty propname="destPath"
+			propvalue="${fastest.installer.installationLocation}\\serviceInstaller\\">
+		</AutomationProperty>
+		<AutomationProperty propname="fileSearchTerm"
+			propvalue="fastest">
+		</AutomationProperty>
+		<AutomationProperty propname="fileSearchExtension"
+			propvalue=".xml">
+		</AutomationProperty>
+		<AutomationProperty
+			propname="createDirIfNotPresent" propvalue="true">
+		</AutomationProperty>
+		<AutomationProperty
+			propname="deleteSourceDirectory" propvalue="false">
+		</AutomationProperty>
+		<AutomationProperty propname="backUpDestination"
+			propvalue="false">
+		</AutomationProperty>
+	</AutomationAction>
+	
+		<AutomationAction
+		name="AutomationSearchAndCopyFileAction"
+		description="Search and Copy fastest jar from installer location to installation location"
+		class="com.infogain.automation.installer.actions.AutomationSearchAndCopyFileAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="COPYDEPENDENCYPHASE" retryCount="1">
+		<AutomationProperty propname="searchLocation"
+			propvalue="${fastest.installer.installerLocation}\\serviceInstaller\\">
+		</AutomationProperty>
+		<AutomationProperty propname="destPath"
+			propvalue="${fastest.installer.installationLocation}\\serviceInstaller\\">
+		</AutomationProperty>
+		<AutomationProperty propname="fileSearchTerm"
+			propvalue="fastest">
+		</AutomationProperty>
+		<AutomationProperty propname="fileSearchExtension"
+			propvalue=".exe">
+		</AutomationProperty>
+		<AutomationProperty
+			propname="createDirIfNotPresent" propvalue="true">
+		</AutomationProperty>
+		<AutomationProperty
+			propname="deleteSourceDirectory" propvalue="false">
+		</AutomationProperty>
+		<AutomationProperty propname="backUpDestination"
+			propvalue="false">
+		</AutomationProperty>
+	</AutomationAction>
+	<AutomationAction
+		name="AutomationUpdatePropertiesFileAction"
+		description="Updates properties file of fastest"
+		class="com.infogain.automation.installer.actions.AutomationUpdatePropertiesFileAction"
+		rollback="true" active="true" exitOnFail="false"
+		automationSoftwareUpdatePhase="APPLICATION_RUN_PHASE" retryCount="2">
+		<AutomationProperty propname="proFileLoc"
+			propvalue="${fastest.installer.installationLocation}\\conf\\fastest.properties">
+		</AutomationProperty>
+	</AutomationAction>
+	<AutomationAction name="AutomationServerInstallAction"
+		description="Installs fastest as windows service"
+		class="com.infogain.automation.installer.actions.AutomationServerInstallAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="INSTALLATIONPHASE" retryCount="1">
+		<AutomationProperty propname="winswExeLoc"
+			propvalue="${fastest.installer.installationLocation}\\serviceInstaller\\fastest.exe">
+		</AutomationProperty>
+		<AutomationProperty propname="serviceId"
+			propvalue="fastest">
+		</AutomationProperty>
+	</AutomationAction>
+	<AutomationAction name="AutomationServerStartAction"
+		description="Starts fastest as windows service"
+		class="com.infogain.automation.installer.actions.AutomationServerStartAction"
+		rollback="true" active="true" exitOnFail="true"
+		automationSoftwareUpdatePhase="APPLICATION_RUN_PHASE" retryCount="1">
+		<AutomationProperty propname="winswExeLoc"
+			propvalue="${fastest.installer.installationLocation}\\serviceInstaller\\fastest.exe">
+		</AutomationProperty>
+		<AutomationProperty propname="serviceId"
+			propvalue="fastest">
+		</AutomationProperty>
+	</AutomationAction>
+	
+	
+</AutomationProject>

@@ -29,6 +29,7 @@ public final class AutomationInstallerPropertyConstants {
     public static final String LOGO_PATH = "fastest.installer.report.logoPath";
     public static final String REPORT_PATH = "fastest.installer.report.pdf.path";
     public static final String INSTALLATION_LOCATION = "fastest.installer.installationLocation";
+    public static final String AUTOMATION_SERVICE_DEFAULT_PORT = "fastest.installer.fastest.service.port";
 
     private AutomationInstallerPropertyConstants() {
         throw new UnsupportedOperationException(AutomationInstallerPropertyConstants.class.getName());

@@ -53,6 +53,8 @@ public final class AutomationSoftwareUpdateConstants {
     public static final String AUTOMATION_INSTALLER_LOCATION_ENVIROMENT_VARIABLE_NAME = "AUTOMATION-SERVER-INSTALLED-LOCATION";
     public static final String AUTOMATION_INSTALLER_ENVIROMENT_VARIABLE = "automationInstallerEnviromentVariable";
     public static final String AUTOMATION_ENABLED_DEVICES = "automation.enabledDevices";
+    public static final String AUTOMATION_SERVICE_PORT = "automationPort";
+    public static final String AUTOMATION_SERVICE_DEFAULT_PORT = "8080";
 
 
     // Constants related to email notification action

@@ -11,10 +11,12 @@ import java.util.StringTokenizer;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
+import javax.mail.Authenticator;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -70,8 +72,8 @@ public class AutomationEmailNotificationAction extends AutomationSoftwareUpdateA
         this.emailSubject = (String) getProps().get(AutomationSoftwareUpdateConstants.EMAIL_SUBJECT);
         this.messageBody = ((String) getProps().get(AutomationSoftwareUpdateConstants.MESSAGE_BODY));
         this.attachmentPaths = (String) getProps().get(AutomationSoftwareUpdateConstants.ATTACHMENT_PATH);
-        installationPhase=this.getAutomationSoftwareUpdatePhase();
-    
+        installationPhase = this.getAutomationSoftwareUpdatePhase();
+
     }
 
     /**
@@ -83,23 +85,28 @@ public class AutomationEmailNotificationAction extends AutomationSoftwareUpdateA
      */
     @Override
     public int execute() {
-        org.apache.logging.log4j.message.Message messageLogger = logger.traceEntry("execute method of AutomationEmailNotificationAction class");
+        org.apache.logging.log4j.message.Message messageLogger =
+                        logger.traceEntry("execute method of AutomationEmailNotificationAction class");
         init();
-        
-        // Making Properties object which will further pass as argument to Session object
-        Properties props = new Properties();
-        props.put("mail.smtp.host", this.emailHost);
-        props.put("mail.smtp.port", Integer.valueOf(this.emailPort));
-        
-        //Setting up a mail session
-        Session session = Session.getInstance(props);
+        Properties emailProps = new Properties();
+        emailProps.put("mail.smtp.host", this.emailHost);
+        emailProps.put("mail.smtp.port", String.valueOf(this.emailPort));
+        emailProps.put("mail.smtp.auth", "true");
+        emailProps.put("mail.smtp.starttls.enable", "true");
+        //emailProps.put("mail.debug", "true");
+        // Setting up a mail session
+        Session session = Session.getInstance(emailProps, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("frameworkfastest@gmail.com", "Titans@123");
+            }
+        });
 
         try {
-        	InternetAddress[] receiversAddress = InternetAddress.parse(this.emailTo, true);
-        	
+            InternetAddress[] receiversAddress = InternetAddress.parse(this.emailTo, true);
+
             InetAddress addr = InetAddress.getLocalHost();
             String machineName = addr.getHostName();
-            
+
             // Setting up message properties
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(this.emailFrom));
@@ -113,24 +120,22 @@ public class AutomationEmailNotificationAction extends AutomationSoftwareUpdateA
                     addAttachment(multipart, fName);
                 }
             }
-            BodyPart htmlBodyPart = new MimeBodyPart(); 
-            htmlBodyPart.setContent(this.messageBody , "text/html");
+            BodyPart htmlBodyPart = new MimeBodyPart();
+            htmlBodyPart.setContent(this.messageBody, "text/html");
             multipart.addBodyPart(htmlBodyPart);
             message.setContent(multipart);
-            this.emailSubject = System.getenv("ctrNumber") != null
-                            ? this.emailSubject + machineName + "-" + System.getenv("ctrNumber")
-                            : this.emailSubject + machineName;
+            this.emailSubject = this.emailSubject + machineName;
             message.setSubject(this.emailSubject);
             logger.debug("Sending email notification");
             Transport.send(message);
         } catch (MessagingException messagingException) {
             logger.error(messagingException.getMessage());
-            throw new AutomationInstallerException(installationPhase.getErrorCode(),messagingException.getMessage(),
-            		messagingException.getCause());
+            throw new AutomationInstallerException(installationPhase.getErrorCode(), messagingException.getMessage(),
+                            messagingException.getCause());
         } catch (UnknownHostException unknownHostException) {
             logger.error(unknownHostException.getMessage());
-            throw new AutomationInstallerException(installationPhase.getErrorCode(),unknownHostException.getMessage(),
-            		unknownHostException.getCause());
+            throw new AutomationInstallerException(installationPhase.getErrorCode(), unknownHostException.getMessage(),
+                            unknownHostException.getCause());
         }
 
         return logger.traceExit(messageLogger, 0);
@@ -172,7 +177,7 @@ public class AutomationEmailNotificationAction extends AutomationSoftwareUpdateA
         while (tokenizer.hasMoreTokens()) {
             attachments.add(tokenizer.nextToken());
         }
-        return logger.traceExit( attachments);
+        return logger.traceExit(attachments);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.infogain.automation.softwareupdate.utilities;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -35,7 +37,7 @@ public class AutomationSoftwareUpdateUtilities {
     public Object createClass(String fullClassName)
                     throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         logger.traceEntry(
-                        "createClass method of AutomationSoftwareUpdateUtilities class that is creating the object of {}",
+                        "createClass method of automationSoftwareUpdateUtilities class that is creating the object of {}",
                         fullClassName);
         try {
             logger.traceExit();
@@ -58,4 +60,34 @@ public class AutomationSoftwareUpdateUtilities {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         return dtf.format(LocalDateTime.now());
     }
+    
+
+    /**
+     * This method returns local host properties
+     * 
+     * @return InetAddress
+     * @since 20-Sep-2019
+     * @version 1.0.0
+     */
+    public InetAddress getLocalHost() throws UnknownHostException {
+        logger.traceEntry("getLocalHost method of PeripheralUpdateHostNameAction class");
+        InetAddress localHost;
+        logger.debug("Reteriving the ip address using the getLocalHost method of InetAddress");
+        localHost = InetAddress.getLocalHost();
+        return logger.traceExit(localHost);
+    }
+
+    /**
+     * This method returns the hostName of peripheral server
+     * 
+     * @return String
+     * @since 20-Sep-2019
+     * @version 1.0.0
+     * @throws UnknownHostException 
+     */
+    public String getAutomationHostName() throws UnknownHostException {
+        logger.debug("Reteriving the host name using the getCanonicalHostName method of InetAddress");
+        return getLocalHost().getCanonicalHostName();
+    }
+
 }

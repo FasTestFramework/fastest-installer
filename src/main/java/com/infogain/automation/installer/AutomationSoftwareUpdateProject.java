@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,6 +46,7 @@ public class AutomationSoftwareUpdateProject {
     private AutomationSoftwareActionLoader automationSoftwareActionLoader;
     private AutomationSoftwareLoadProperties automationSoftwareLoadProperties;
     private AutomationPDFGeneration automationPDFGeneration;
+    String serverInformation;
     private static final Logger logger = LogManager.getLogger(AutomationSoftwareUpdateProject.class);
 
     public AutomationSoftwareUpdateProject(final AutomationProject project, String configPropertyPath,
@@ -96,29 +98,43 @@ public class AutomationSoftwareUpdateProject {
                 boolean actionStatus = automationSoftwareUpdate.executeAction(actionToBePerformed);
                 logger.info("action status" + actionToBePerformed.getName() + " status code "
                                 + automationSoftwareUpdate.getStatusCode());
-                currentPhase = actionToBePerformed.getAutomationSoftwareUpdatePhase().name();
-                ActionStatusInfo pdfReportDTO = new ActionStatusInfo(actionToBePerformed.getName(),
-                                actionToBePerformed.getDescription(), actionStatus);
-                if (currentPhase.equals(previousPhase)) {
-                    reportTables.get(currentPhase).add(pdfReportDTO);
-                } else {
-                    List<ActionStatusInfo> actionsList = new ArrayList<>();
-                    actionsList.add(pdfReportDTO);
-                    reportTables.put(currentPhase, actionsList);
-                    previousPhase = currentPhase;
+                if (!isInitialization) {
+                    currentPhase = actionToBePerformed.getAutomationSoftwareUpdatePhase().name();
+                    ActionStatusInfo pdfReportDTO = new ActionStatusInfo(actionToBePerformed.getName(),
+                                    actionToBePerformed.getDescription(), actionStatus);
+                    if (currentPhase.equals(previousPhase)) {
+                        reportTables.get(currentPhase).add(pdfReportDTO);
+                    } else {
+                        List<ActionStatusInfo> actionsList = new ArrayList<>();
+                        actionsList.add(pdfReportDTO);
+                        reportTables.put(currentPhase, actionsList);
+                        previousPhase = currentPhase;
+                    }
                 }
             }
-            lastPhase = currentPhase;
         }
+        lastPhase = currentPhase;
         errorCode = automationSoftwareUpdate.getStatusCode();
-//        AutomationInstallationVerificationAction automationInstallationVerificationAction =
-//                        new AutomationInstallationVerificationAction();
-//        if (errorCode == 0) {
-//            errorCode = automationInstallationVerificationAction.execute();
-//            ActionStatusInfo pdfReportDTO = new ActionStatusInfo("AutomationInstallationVerificationAction",
-//                            "Verify if automation server is running", errorCode == 0);
-//            reportTables.get(lastPhase).add(pdfReportDTO);
-//        }
+        AutomationInstallationVerificationAction automationInstallationVerificationAction =
+                        new AutomationInstallationVerificationAction();
+        if (!isInitialization && errorCode == 0) {
+            String automationServerPort = automationSoftwareLoadProperties.getProperty()
+                            .getProperty(AutomationInstallerPropertyConstants.AUTOMATION_SERVICE_DEFAULT_PORT);
+            automationServerPort = StringUtils.isBlank(automationServerPort)
+                            ? AutomationSoftwareUpdateConstants.AUTOMATION_SERVICE_DEFAULT_PORT
+                            : automationServerPort;
+            Properties props = new Properties();
+            props.put(AutomationSoftwareUpdateConstants.AUTOMATION_SERVICE_PORT, automationServerPort);
+            automationInstallationVerificationAction
+                            .setAutomationSoftwareUpdatePhase(AutomationPhasesErrorCode.VALIDATIONPHASE);
+            automationInstallationVerificationAction.setProps(props);
+            errorCode = automationInstallationVerificationAction.execute();
+            serverInformation = automationInstallationVerificationAction.getServerInformation();
+            automationSoftwareUpdate.setActionRequired(errorCode != 0);
+            ActionStatusInfo pdfReportDTO = new ActionStatusInfo("AutomationInstallationVerificationAction",
+                            "Verify if automation server is running", errorCode == 0);
+            reportTables.get(lastPhase).add(pdfReportDTO);
+        }
         String finalStatus = getFinalStatus(automationSoftwareUpdate.isActionRequired(), errorCode, isInitialization);
         List<ActionStatusInfo> cleanUpActions = automationSoftwareUpdate.cleanUp();
         if (!cleanUpActions.isEmpty()) {
@@ -144,10 +160,8 @@ public class AutomationSoftwareUpdateProject {
         logger.traceEntry("triggerEmailAction method of AutomationSoftwareUpdateProject class");
         int errorCode = automationSoftwareUpdate.getStatusCode();
         boolean actionRequired = automationSoftwareUpdate.isActionRequired();
-        String serverInformation = null;
         AutomationEmailNotificationAction automationEmailNotificationAction = new AutomationEmailNotificationAction();
-        automationEmailNotificationAction
-                        .setAutomationSoftwareUpdatePhase(AutomationPhasesErrorCode.REPORTINGPHASE);
+        automationEmailNotificationAction.setAutomationSoftwareUpdatePhase(AutomationPhasesErrorCode.REPORTINGPHASE);
 
         // Creating the Properties Object and setting the values for email action
 
@@ -167,14 +181,6 @@ public class AutomationSoftwareUpdateProject {
                                         .getProperty(AutomationInstallerPropertyConstants.ATTACHMENT_PATH)));
         Properties properties = automationSoftwareActionLoader.buildPropertiesForAction(property,
                         automationSoftwareLoadProperties.getProperty());
-        if (!isInitialization) {
-            AutomationInstallationVerificationAction automationInstallationVerificationAction =
-                            new AutomationInstallationVerificationAction();
-            if (errorCode == 0) {
-                errorCode = automationInstallationVerificationAction.execute();
-            }
-            serverInformation = automationInstallationVerificationAction.getServerInformation();
-        }
         String temporaryMessageBody = null;
         if (serverInformation != null) {
             temporaryMessageBody = formatServerResponse(serverInformation);
@@ -182,28 +188,25 @@ public class AutomationSoftwareUpdateProject {
         // Conditionally setting up email subject and body depending upon automation server installation status
         if (actionRequired) {
             // Setting subject and body for action required mail
-            properties.setProperty(AutomationSoftwareUpdateConstants.EMAIL_SUBJECT, automationSoftwareLoadProperties
-                            .getProperty()
-                            .getProperty(AutomationInstallerPropertyConstants.EMAIL_SUBJECT_ACTION_REQUIRED));
+            properties.setProperty(AutomationSoftwareUpdateConstants.EMAIL_SUBJECT,
+                            automationSoftwareLoadProperties.getProperty().getProperty(
+                                            AutomationInstallerPropertyConstants.EMAIL_SUBJECT_ACTION_REQUIRED));
             properties.setProperty(AutomationSoftwareUpdateConstants.MESSAGE_BODY,
                             automationSoftwareLoadProperties.getProperty().getProperty(
                                             AutomationInstallerPropertyConstants.MESSAGE_BODY_ACTION_REQUIRED));
         } else if (errorCode > 0) {
             // Setting subject and body for failure mail
-            properties.setProperty(AutomationSoftwareUpdateConstants.EMAIL_SUBJECT,
-                            automationSoftwareLoadProperties.getProperty().getProperty(
-                                            AutomationInstallerPropertyConstants.EMAIL_SUBJECT_FAILURE));
-            properties.setProperty(AutomationSoftwareUpdateConstants.MESSAGE_BODY,
-                            automationSoftwareLoadProperties.getProperty().getProperty(
-                                            AutomationInstallerPropertyConstants.MESSAGE_BODY_FAILURE));
+            properties.setProperty(AutomationSoftwareUpdateConstants.EMAIL_SUBJECT, automationSoftwareLoadProperties
+                            .getProperty().getProperty(AutomationInstallerPropertyConstants.EMAIL_SUBJECT_FAILURE));
+            properties.setProperty(AutomationSoftwareUpdateConstants.MESSAGE_BODY, automationSoftwareLoadProperties
+                            .getProperty().getProperty(AutomationInstallerPropertyConstants.MESSAGE_BODY_FAILURE));
         } else if (errorCode == 0 && !isInitialization) {
             // Setting subject and body for success mail
-            properties.setProperty(AutomationSoftwareUpdateConstants.EMAIL_SUBJECT,
-                            automationSoftwareLoadProperties.getProperty().getProperty(
-                                            AutomationInstallerPropertyConstants.EMAIL_SUBJECT_SUCCESS));
+            properties.setProperty(AutomationSoftwareUpdateConstants.EMAIL_SUBJECT, automationSoftwareLoadProperties
+                            .getProperty().getProperty(AutomationInstallerPropertyConstants.EMAIL_SUBJECT_SUCCESS));
             properties.setProperty(AutomationSoftwareUpdateConstants.MESSAGE_BODY,
-                            automationSoftwareLoadProperties.getProperty().getProperty(
-                                            AutomationInstallerPropertyConstants.MESSAGE_BODY_SUCCESS)
+                            automationSoftwareLoadProperties.getProperty()
+                                            .getProperty(AutomationInstallerPropertyConstants.MESSAGE_BODY_SUCCESS)
                                             + temporaryMessageBody);
         }
 

@@ -127,7 +127,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<java.version>1.8</java.version>
 		<spring.framework>4.3.0.RELEASE</spring.framework>
-		<spring.web>3.0.2.RELEASE</spring.web>
+		<spring.web>6.0.0</spring.web>
 		<serializer.version>2.8.1</serializer.version>
 		<project.reporting.outputDirectory>${basedir}\src\site\</project.reporting.outputDirectory>
 		<maven-project-info-reports-plugin-version>3.0.0</maven-project-info-reports-plugin-version>
